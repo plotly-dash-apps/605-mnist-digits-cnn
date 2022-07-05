@@ -12,27 +12,17 @@ import json
 import plotly.graph_objects as go
 import plotly.express as px
 import pickle
+import keras
+from keras.models import load_model
 
 ########### open the pickle file ######
-
-filename = open('model_outputs/scaler.pkl', 'rb')
-scaler = pickle.load(filename)
-filename.close()
-
-filename = open('model_outputs/rf_model.pkl', 'rb')
-rf_model = pickle.load(filename)
-filename.close()
-
-filename = open('model_outputs/xgb_model.pkl', 'rb')
-xgb_model = pickle.load(filename)
-filename.close()
-
+cnn_model = load_model('models/cnn_model_3.h5')
 
 
 ########### define variables
 tabtitle='digits classifier'
 sourceurl = 'https://scikit-learn.org/stable/auto_examples/classification/plot_digits_classification.html'
-githublink = 'https://github.com/plotly-dash-apps/506-digit-classifier-xgboost'
+githublink = 'https://github.com/plotly-dash-apps/605-mnist-digits-cnn'
 canvas_size = 200
 
 ########### BLANK FIGURE
@@ -105,6 +95,21 @@ def array_to_data_url(img, dtype=None):
     df2=squash_matrix(df, cols=28, rows=28) # reduce the number of columns to 28
     return df2
 
+# load and prepare the image
+def load_image(img):
+	# reshape into a single sample with 1 channel
+	img = img.reshape(1, 28, 28, 1)
+	# prepare pixel data
+	img = img.astype('float32')
+	img = img / 255.0
+	return img
+
+
+# make predictions
+def make_prediction(img, cnn_model):
+	predict_value = cnn_model.predict(img)
+	digit = argmax(predict_value)
+	return digit
 
 ########### Initiate the app
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -149,13 +154,10 @@ app.layout = html.Div(children=[
             html.Div([
                 html.H3('Predicted Digit'),
                 html.Br(),
-                html.H4('Random Forest Model:'),
-                html.H6(id='rf-prediction', children='...'),
-                html.H6(id='rf-probability', children='waiting for inputs'),
-                html.Br(),
-                html.H4('XGBoost Model:'),
-                html.H6(id='xgb-prediction', children='...'),
-                html.H6(id='xgb-probability', children='waiting for inputs'),
+                html.H4('CNN Model:'),
+                html.H6(id='cnn-prediction', children='...'),
+                # html.H6(id='rf-probability', children='waiting for inputs'),
+
             ], className='three columns'),
         ], className="twelve columns"),
         ]),
@@ -170,10 +172,9 @@ app.layout = html.Div(children=[
 ######### CALLBACK
 @app.callback(
                 Output('output-figure', 'figure'),
-                Output('rf-prediction', 'children'),
-                Output('rf-probability', 'children'),
-                Output('xgb-prediction', 'children'),
-                Output('xgb-probability', 'children'),
+                Output('cnn-prediction', 'children'),
+                # Output('rf-probability', 'children'),
+
               Input('canvas', 'json_data'))
 def update_data(string):
     if string:
@@ -192,35 +193,31 @@ def update_data(string):
         fig.update(layout_coloraxis_showscale=False)
         fig.update(layout_showlegend=False)
 
-        # pickle the user input
-        filename = open('user-input-digit.pkl', 'wb')
-        pickle.dump(array_to_data_output, filename)
-        filename.close()
+                    # pickle the user input
+                    # filename = open('user-input-digit.pkl', 'wb')
+                    # pickle.dump(array_to_data_output, filename)
+                    # filename.close()
 
         # convert the user input to the format expected by the model
         some_digit_array = np.reshape(array_to_data_output.values, -1)
-        print('some_digit_array',[some_digit_array])
 
-        # standardize
-        some_digit_scaled = scaler.transform([some_digit_array])
+                    # standardize
+                    # some_digit_scaled = scaler.transform([some_digit_array])
 
-        # make a prediction: Random Forest
-        rf_pred = rf_model.predict(some_digit_scaled)
-        rf_prob_array = rf_model.predict_proba(some_digit_scaled)
-        rf_prob = max(rf_prob_array[0])
-        rf_prob=round(rf_prob*100,2)
+        # make a prediction
+        pred = make_prediction(img, cnn_model)
+                    # rf_pred = rf_model.predict(some_digit_scaled)
+                    # rf_prob_array = rf_model.predict_proba(some_digit_scaled)
+                    # rf_prob = max(rf_prob_array[0])
+                    # rf_prob=round(rf_prob*100,2)
 
-        # make a prediction: XG Boost
-        xgb_pred = xgb_model.predict(some_digit_scaled)
-        xgb_prob_array = xgb_model.predict_proba(some_digit_scaled)
-        xgb_prob = max(xgb_prob_array[0])
-        xgb_prob=round(xgb_prob*100,2)
+
 
     else:
         raise PreventUpdate
 
 
-    return   fig,  f'Digit: {rf_pred[0]}', f'Probability: {rf_prob}%', f'Digit: {xgb_pred[0]}', f'Probability: {xgb_prob}%'
+    return   fig,  f'Predicted Digit: {pred}'
 
 
 if __name__ == '__main__':
