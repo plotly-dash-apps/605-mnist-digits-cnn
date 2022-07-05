@@ -1,5 +1,5 @@
 import numpy as np
-from skimage import io
+# from skimage import io
 import dash
 from dash.exceptions import PreventUpdate
 from dash.dependencies import Input, Output, State
@@ -11,16 +11,16 @@ import pandas as pd
 import json
 import plotly.graph_objects as go
 import plotly.express as px
-import pickle
+# import pickle
 import keras
 from keras.models import load_model
 
 ########### open the pickle file ######
-cnn_model = load_model('models/cnn_model_3.h5')
+cnn_model = load_model('analysis/models/cnn_model_4.h5')
 
 
 ########### define variables
-tabtitle='digits classifier'
+tabtitle='mnist cnn'
 sourceurl = 'https://scikit-learn.org/stable/auto_examples/classification/plot_digits_classification.html'
 githublink = 'https://github.com/plotly-dash-apps/605-mnist-digits-cnn'
 canvas_size = 200
