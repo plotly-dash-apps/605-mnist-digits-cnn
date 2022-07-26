@@ -11,6 +11,7 @@ It's pretty easy to switch between instance types, like this:
 
 More info about Sagemaker pricing here: 
 * https://aws.amazon.com/sagemaker/pricing/
+* https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-available-images.html
 * https://aws.amazon.com/machine-learning/accelerate-machine-learning-P3/
 * https://stackoverflow.com/questions/60868257/aws-sagemaker-on-gpu
 
